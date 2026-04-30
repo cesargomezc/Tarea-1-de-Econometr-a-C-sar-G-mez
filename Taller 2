@@ -1,0 +1,617 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": [],
+      "authorship_tag": "ABX9TyM97IaFhS0zdlvAPotQKvcd",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "ir",
+      "display_name": "R"
+    },
+    "language_info": {
+      "name": "R"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/cesargomezc/Tarea-1-de-Econometr-a-C-sar-G-mez/blob/main/Taller%202\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "1. (10 puntos) Examine la base y elabore una breve descripción de sus variables, distinguiendo\n",
+        "entre dependientes, explicativas, continuas y dummies. ¿Para qué tipo de estudio económico\n",
+        "se emplea habitualmente esta base de datos?"
+      ],
+      "metadata": {
+        "id": "-0VV4VRkTxSb"
+      }
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 1,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "Q1zbmztWC1MZ",
+        "outputId": "a4ae457e-7d18-43b7-c1d3-03e52210ec42"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stderr",
+          "text": [
+            "Installing package into ‘/usr/local/lib/R/site-library’\n",
+            "(as ‘lib’ is unspecified)\n",
+            "\n"
+          ]
+        }
+      ],
+      "source": [
+        "install.packages(\"wooldridge\")\n",
+        "library(wooldridge)\n",
+        "data(lawsch85)"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "set.seed(1)\n",
+        "data(ceosal1)\n",
+        "ceosal1 <- na.omit(ceosal1)\n",
+        "?ceosal1"
+      ],
+      "metadata": {
+        "id": "SCt8TfMxUvd-"
+      },
+      "execution_count": 3,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Se utiliza en estudios empíricos de Economía Laboral y Finanzas Corporativas, específicamente para analizar la compensación ejecutiva. Sirve para evaluar empíricamente la relación \"pago-desempeño\", es decir, si el sueldo de los directivos se explica por el éxito financiero de sus empresas o por diferencias sectoriales.\n",
+        "\n",
+        "Respecto a su clasificación, esta está de la siguiente manera: Clasificación de las Variables\n",
+        "\n",
+        "Variables Dependientes (Continuas): Representan lo que el modelo busca explicar (la remuneración del directivo). Incluyen salary (salario), su logaritmo lsalary, y su cambio porcentual pcsalary.\n",
+        "\n",
+        "Variables Explicativas Continuas: Representan el desempeño financiero y el tamaño de la firma para justificar el salario. Incluyen métricas de ventas (sales, lsales) y de rendimientos (roe, pcroe, ros).\n",
+        "\n",
+        "Variables Explicativas Dummies (Dicotómicas): Toman valor 1 o 0 y sirven para controlar estadísticamente a qué sector pertenece la empresa. Incluyen indus (industrial), finance (financiero), consprod (consumo) y utility (servicios públicos)."
+      ],
+      "metadata": {
+        "id": "q5MSA-swVXaF"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "2. (5 puntos) Genere una variable indicadora (dummy) que tome el valor 1 cuando la variable\n",
+        "sales supere su promedio y 0 en caso contrario. Asigne a esta nueva variable un nombre que\n",
+        "sea fácilmente identificable."
+      ],
+      "metadata": {
+        "id": "kPLGvOB4VYNd"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "ceosal1$high_sales <- ifelse(ceosal1$sales > mean(ceosal1$sales, na.rm = TRUE), 1, 0)"
+      ],
+      "metadata": {
+        "id": "W4CVJJ_1Vbmp"
+      },
+      "execution_count": 11,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "3. (5 puntos) Cree una variable de la multuplicación entre la variable dummy antes creada y la\n",
+        "variable indus. ¿Qué indica esta interacción?"
+      ],
+      "metadata": {
+        "id": "vQvEupmhVfFC"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "ceosal1$high_sales_indus <- ceosal1$high_sales * ceosal1$indus"
+      ],
+      "metadata": {
+        "id": "wYI1OS1rVefy"
+      },
+      "execution_count": 13,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Esta nueva variable representa la intersección de 2 características, en terminos económicos sirve para evaluar si existe un \"efecto adicional\" o particular. En un modelo de regresión, te permitirá medir si el premio salarial por tener ventas altas es estadísticamente diferente para los directivos del sector industrial en comparación con los directivos de los demás sectores.\n",
+        "\n",
+        "La variable:\n",
+        "\n",
+        "Toma el valor de 1 única y exclusivamente cuando se cumplen ambas condiciones al mismo tiempo: la empresa tiene ventas superiores al promedio (high_sales = 1) Y además pertenece al sector industrial (indus = 1).\n",
+        "\n",
+        "Toma el valor de 0 en cualquier otro escenario (si la empresa no es industrial, si sus ventas son bajas, o ambas).\n"
+      ],
+      "metadata": {
+        "id": "S7qMt0OgVjbR"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "4. (5 puntos) Cree una variable de la multiplicación entre la variable continua roe y la variable\n",
+        "dummy antes creada. ¿Qué indica esta interacción?"
+      ],
+      "metadata": {
+        "id": "PpYniVTlVlqY"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "ceosal1$high_sales_roe <- ceosal1$high_sales * ceosal1$roe"
+      ],
+      "metadata": {
+        "id": "kknWRvo3Vo4p"
+      },
+      "execution_count": 14,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Esta nueva variable indica que;\n",
+        "\n",
+        "Mecánicamente: La nueva variable toma el valor exacto del roe (retorno sobre el capital) solo para aquellas empresas que tienen ventas sobre el promedio. Para las empresas con ventas bajo el promedio, la variable toma el valor de 0.\n",
+        "\n",
+        "Interpretación Econométrica: En un modelo de regresión, esta interacción sirve para evaluar si el efecto del rendimiento (roe) sobre el salario del directivo depende del tamaño de las ventas de la empresa. En otras palabras, permite comprobar si un aumento en el ROE se premia económicamente de forma distinta (con salarios más altos o más bajos) en las empresas con ventas altas frente a las empresas con ventas bajas."
+      ],
+      "metadata": {
+        "id": "BI23jFz6VprB"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "5. (5 puntos) Cree una variable que indique si el compañia corresponde a industria (indus) ó si\n",
+        "f\n",
+        "inance. Asigne a esta nueva variable un nombre que sea fácilmente identificable."
+      ],
+      "metadata": {
+        "id": "lXFqtg0xVt4S"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "ceosal1$indus_fin <- ifelse(ceosal1$indus == 1 | ceosal1$finance == 1, 1, 0)"
+      ],
+      "metadata": {
+        "id": "EClgQyRKVu5C"
+      },
+      "execution_count": 16,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "2 Modelos de Regresión Lineal (70 puntos)\n",
+        "1. (15 puntos) Genere un modelo de regresión lineal, sobre alguna de las variables dependientes,\n",
+        "con respecto a las variables sales, roe y ros. Interprete sus resultados y la significancia de los\n",
+        "regresores. ¿El modelo tiene significancia global al 5%?"
+      ],
+      "metadata": {
+        "id": "jXj-stdXVwc_"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        " modelo <- lm(salary ~ sales+roe+ros, data=ceosal1)\n",
+        "summary(modelo)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 364
+        },
+        "id": "-eS2MgRJV0Lf",
+        "outputId": "82adf800-2070-43f2-9969-b4145ed4b4e2"
+      },
+      "execution_count": 17,
+      "outputs": [
+        {
+          "output_type": "display_data",
+          "data": {
+            "text/plain": [
+              "\n",
+              "Call:\n",
+              "lm(formula = salary ~ sales + roe + ros, data = ceosal1)\n",
+              "\n",
+              "Residuals:\n",
+              "    Min      1Q  Median      3Q     Max \n",
+              "-1495.0  -486.5  -242.8    98.9 13516.4 \n",
+              "\n",
+              "Coefficients:\n",
+              "              Estimate Std. Error t value Pr(>|t|)    \n",
+              "(Intercept) 864.117516 228.399737   3.783 0.000203 ***\n",
+              "sales         0.015482   0.008954   1.729 0.085291 .  \n",
+              "roe          22.003312  11.516554   1.911 0.057454 .  \n",
+              "ros          -1.105191   1.450240  -0.762 0.446892    \n",
+              "---\n",
+              "Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1\n",
+              "\n",
+              "Residual standard error: 1360 on 205 degrees of freedom\n",
+              "Multiple R-squared:  0.03191,\tAdjusted R-squared:  0.01775 \n",
+              "F-statistic: 2.253 on 3 and 205 DF,  p-value: 0.08337\n"
+            ]
+          },
+          "metadata": {}
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Interpretación de Coeficientes y Significancia Individual al 5%\n",
+        "\n",
+        "En un modelo de regresión, el p-valor (columna Pr(>|t|)) de cada variable debe ser menor a 0.05 para ser estadísticamente significativo. para este caso:\n",
+        "\n",
+        "sales (0.0155): Por cada 1 millón de dólares extra en ventas, el salario aumenta en 15.5 dólares. No es significativa al 5% (p-valor $\\approx$ 0.085 > 0.05).\n",
+        "\n",
+        "roe (22.00): Por cada 1 punto porcentual adicional en el ROE, el salario aumenta en 22,000 dólares. No es significativa al 5% (p-valor $\\approx$ 0.057 > 0.05).\n",
+        "\n",
+        "ros (-1.11): Por cada 1 punto porcentual adicional en el ROS, el salario disminuye en 1,110 dólares. No es significativa al 5% (p-valor $\\approx$ 0.447 > 0.05).\n",
+        "\n",
+        "Conclusión individual: Ninguna de las variables por sí sola explica el salario de los directivos con un 95% de confianza.\n",
+        "\n",
+        "sobre la significancia global del modelo al 5%:\n",
+        "\n",
+        "Para esto se evalúa el estadístico F (ubicado al final del resumen en R), que mide si todas las variables en conjunto explican a la variable dependiente.\n",
+        "\n",
+        "Conclusión Global: El p-valor del estadístico F es mayor a 0.05 (es aproximadamente 0.08). Por lo tanto, no se rechaza la hipótesis nula, por lo tanto el modelo NO tiene significancia global al 5%."
+      ],
+      "metadata": {
+        "id": "MnVtpUZFV02r"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "2. (10 puntos) Al modelo de regresión lineal anterior, agregue las variables creadas en el inciso 1.2\n",
+        "y 1.4, interprete sus resultados. ¿Cómo afectan los regresores de estas variables en el salario?"
+      ],
+      "metadata": {
+        "id": "mplbmXlEV20G"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "modelo <- lm(salary ~ sales + roe + ros + high_sales + high_sales_roe, data = ceosal1)\n",
+        "summary(modelo)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 416
+        },
+        "id": "ZYZ3nNEIV57D",
+        "outputId": "2c072388-1eec-451f-a0b2-8db6218cfea9"
+      },
+      "execution_count": 19,
+      "outputs": [
+        {
+          "output_type": "display_data",
+          "data": {
+            "text/plain": [
+              "\n",
+              "Call:\n",
+              "lm(formula = salary ~ sales + roe + ros + high_sales + high_sales_roe, \n",
+              "    data = ceosal1)\n",
+              "\n",
+              "Residuals:\n",
+              "    Min      1Q  Median      3Q     Max \n",
+              " -976.0  -469.1  -263.4    97.2 13566.3 \n",
+              "\n",
+              "Coefficients:\n",
+              "                 Estimate Std. Error t value Pr(>|t|)   \n",
+              "(Intercept)    783.298711 258.064395   3.035  0.00272 **\n",
+              "sales            0.006657   0.011197   0.594  0.55285   \n",
+              "roe             24.472338  13.088222   1.870  0.06295 . \n",
+              "ros             -0.986904   1.457818  -0.677  0.49919   \n",
+              "high_sales     513.083213 510.134319   1.006  0.31572   \n",
+              "high_sales_roe  -9.498301  25.587585  -0.371  0.71087   \n",
+              "---\n",
+              "Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1\n",
+              "\n",
+              "Residual standard error: 1361 on 203 degrees of freedom\n",
+              "Multiple R-squared:  0.04059,\tAdjusted R-squared:  0.01696 \n",
+              "F-statistic: 1.718 on 5 and 203 DF,  p-value: 0.132\n"
+            ]
+          },
+          "metadata": {}
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Estas variables NO afectan el salario de manera significativa.\n",
+        "\n",
+        "Dado que ninguno de los dos nuevos regresores (high_sales y high_sales_roe) tiene significancia estadística, no existe evidencia empírica suficiente al 95% de confianza para afirmar que el tamaño de las ventas de la empresa modifique la estructura salarial (ni el intercepto ni la pendiente del ROE) de los directivos en esta muestra.\n",
+        "\n",
+        "Además el modelo en su conjunto sigue sin ser significativo, ya que el p-valor del estadístico F es 0.132, lo que indica que todas estas variables juntas siguen sin explicar adecuadamente las variaciones en el salario de los CEOs"
+      ],
+      "metadata": {
+        "id": "3xsHZYJnV6WM"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "3. (15 puntos) Realiza un test de hipotesis para evaluar si las dos variables que se agregaron son\n",
+        "significativas para el modelo simultaneamente. Use significancia del 5%."
+      ],
+      "metadata": {
+        "id": "Kc-UK4VmV7fP"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# ===================================================================\n",
+        "# TEST DE HIPÓTESIS: SIGNIFICANCIA CONJUNTA (PRUEBA F)\n",
+        "# ===================================================================\n",
+        "\n",
+        "# 1. Definición de los R-cuadrados (R2) de ambos modelos\n",
+        "R2_ur <- 0.04059  # R2 del Modelo Irrestricto (con las dummies)\n",
+        "R2_r  <- 0.03191  # R2 del Modelo Restringido (sin las dummies)\n",
+        "\n",
+        "# 2. Definición de parámetros para los grados de libertad\n",
+        "n <- 209          # Número total de observaciones en la base ceosal1\n",
+        "k <- 5            # Número de regresores en el modelo irrestricto\n",
+        "q <- 2            # Número de restricciones (variables a evaluar)\n",
+        "gl_den <- n-k-1   # Grados de libertad del denominador (203)\n",
+        "\n",
+        "# 3. Cálculo del Estadístico F empírico (F_est)\n",
+        "# Fórmula: F = [ (R2_ur - R2_r) / q ] / [ (1 - R2_ur) / gl_den ]\n",
+        "F_est <- ((R2_ur - R2_r) / q) / ((1 - R2_ur) / gl_den)\n",
+        "\n",
+        "# 4. Cálculo del Valor Crítico (F_critico) al 5% de significancia (alpha = 0.05)\n",
+        "F_critico <- qf(0.95, df1 = q, df2 = gl_den)\n",
+        "\n",
+        "# 5. Visualización de los resultados en la consola\n",
+        "cat(\"--- RESULTADOS DEL TEST DE HIPÓTESIS ---\\n\")\n",
+        "cat(\"H0: Las variables añadidas (high_sales y high_sales_roe) son = 0\\n\")\n",
+        "cat(\"H1: Al menos una de las variables es distinta de 0\\n\\n\")\n",
+        "\n",
+        "cat(\"Estadístico F calculado (F_est): \", round(F_est, 3), \"\\n\")\n",
+        "cat(\"Valor Crítico (F_critico) al 5%: \", round(F_critico, 3), \"\\n\\n\")\n",
+        "\n",
+        "# 6. Regla de decisión y Conclusión\n",
+        "if (F_est > F_critico) {\n",
+        "  cat(\"DECISIÓN: Se rechaza H0 (\", round(F_est, 3), \">\", round(F_critico, 3), \")\\n\")\n",
+        "  cat(\"CONCLUSIÓN: Las variables son significativas conjuntamente al 5%.\\n\")\n",
+        "} else {\n",
+        "  cat(\"DECISIÓN: No se rechaza H0 (\", round(F_est, 3), \"<\", round(F_critico, 3), \")\\n\")\n",
+        "  cat(\"CONCLUSIÓN: Las variables NO son significativas conjuntamente al 5%.\\n\")\n",
+        "}\n"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "P_4-jUBwV_sT",
+        "outputId": "c84daad1-44c4-48f7-9c21-b7c1340337f8"
+      },
+      "execution_count": 22,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "--- RESULTADOS DEL TEST DE HIPÓTESIS ---\n",
+            "H0: Las variables añadidas (high_sales y high_sales_roe) son = 0\n",
+            "H1: Al menos una de las variables es distinta de 0\n",
+            "\n",
+            "Estadístico F calculado (F_est):  0.918 \n",
+            "Valor Crítico (F_critico) al 5%:  3.04 \n",
+            "\n",
+            "DECISIÓN: No se rechaza H0 ( 0.918 < 3.04 )\n",
+            "CONCLUSIÓN: Las variables NO son significativas conjuntamente al 5%.\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "4. (15 puntos) Volviendo a la regresión del salario en función de sales, roe y ros. Considere\n",
+        "dos grupos, Grupo 1: Aquellos clientes que sales es mayor al promedio, y Grupo 2: Aquellos\n",
+        "clientes que sales es menor al promedio. Realice un test de hipotesis para grupos al 5% de\n",
+        "significancia. Use el metodo que más le acomode."
+      ],
+      "metadata": {
+        "id": "wEKMK00FWBN4"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# ===================================================================\n",
+        "# TEST DE CHOW: COMPARACIÓN DE GRUPOS (VENTAS ALTAS VS BAJAS)\n",
+        "# ===================================================================\n",
+        "\n",
+        "# 1. Creación de variables de interacción (Dummies multiplicativas)\n",
+        "# Asumiendo que 'sales_mayor_promedio' ya está creada en tu base 'ceosal1'\n",
+        "ceosal1$sales_D <- ceosal1$sales * ceosal1$sales_mayor_promedio\n",
+        "ceosal1$roe_D   <- ceosal1$roe * ceosal1$sales_mayor_promedio\n",
+        "ceosal1$ros_D   <- ceosal1$ros * ceosal1$sales_mayor_promedio\n",
+        "\n",
+        "# 2. Definición de parámetros extraídos de los modelos\n",
+        "R2_ur <- 0.06028  # R2 del modelo irrestricto (con las 4 nuevas variables)\n",
+        "R2_r  <- 0.03191  # R2 del modelo restringido (base)\n",
+        "n <- 209          # Observaciones totales\n",
+        "k <- 7            # Regresores en el modelo irrestricto\n",
+        "q <- 4            # Restricciones (la dummy + 3 interacciones)\n",
+        "gl_den <- n - k - 1 # Grados de libertad del denominador (201)\n",
+        "\n",
+        "# 3. Cálculo del Estadístico F (F_est)\n",
+        "F_est <- ((R2_ur - R2_r) / q) / ((1 - R2_ur) / gl_den)\n",
+        "\n",
+        "# 4. Cálculo del Valor Crítico (F_critico) al 5%\n",
+        "F_critico <- qf(0.95, df1 = q, df2 = gl_den)\n",
+        "\n",
+        "# 5. Visualización de resultados\n",
+        "cat(\"--- RESULTADOS DEL TEST DE COMPARACIÓN DE GRUPOS ---\\n\")\n",
+        "cat(\"Estadístico F calculado (F_est): \", round(F_est, 3), \"\\n\")\n",
+        "cat(\"Valor Crítico (F_critico) al 5%: \", round(F_critico, 3), \"\\n\\n\")\n",
+        "\n",
+        "# 6. Regla de decisión\n",
+        "if (F_est > F_critico) {\n",
+        "  cat(\"DECISIÓN: Se rechaza H0 (\", round(F_est, 3), \">\", round(F_critico, 3), \")\\n\")\n",
+        "  cat(\"CONCLUSIÓN: Existen diferencias estructurales significativas entre los grupos.\\n\")\n",
+        "} else {\n",
+        "  cat(\"DECISIÓN: No se rechaza H0 (\", round(F_est, 3), \"<\", round(F_critico, 3), \")\\n\")\n",
+        "  cat(\"CONCLUSIÓN: NO hay diferencias estructurales significativas entre los grupos.\\n\")\n",
+        "}"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "uGmmcZ9MWElU",
+        "outputId": "3a3c5e2b-2453-4fe5-c280-365cc6764bf0"
+      },
+      "execution_count": 23,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "--- RESULTADOS DEL TEST DE COMPARACIÓN DE GRUPOS ---\n",
+            "Estadístico F calculado (F_est):  1.517 \n",
+            "Valor Crítico (F_critico) al 5%:  2.417 \n",
+            "\n",
+            "DECISIÓN: No se rechaza H0 ( 1.517 < 2.417 )\n",
+            "CONCLUSIÓN: NO hay diferencias estructurales significativas entre los grupos.\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "5. (15puntos)Usando laregresióndel salarioenfuncióndesales, roeyros, sedistinguenlos\n",
+        "gruposmediantelasdummies; indus,finance,consprodyutility,quecorrespondenal tipode\n",
+        "empresa. RealicemediantetestdeChow, con5%designificancia, si losmodelosparacada\n",
+        "gruposoniguales."
+      ],
+      "metadata": {
+        "id": "3YSBSUpvWGIz"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# ===================================================================\n",
+        "# TEST DE CHOW PARA MÚLTIPLES GRUPOS (POR SECTOR)\n",
+        "# ===================================================================\n",
+        "\n",
+        "# 1. Creación de las submuestras\n",
+        "ceosal1_indus    <- subset(ceosal1, indus == 1)\n",
+        "ceosal1_finance  <- subset(ceosal1, finance == 1)\n",
+        "ceosal1_consprod <- subset(ceosal1, consprod == 1)\n",
+        "ceosal1_utility  <- subset(ceosal1, utility == 1)\n",
+        "\n",
+        "# 2. Estimación de los modelos\n",
+        "modelo_r        <- lm(salary ~ sales + roe + ros, data = ceosal1) # Restringido\n",
+        "modelo_indus    <- lm(salary ~ sales + roe + ros, data = ceosal1_indus)\n",
+        "modelo_finance  <- lm(salary ~ sales + roe + ros, data = ceosal1_finance)\n",
+        "modelo_consprod <- lm(salary ~ sales + roe + ros, data = ceosal1_consprod)\n",
+        "modelo_utility  <- lm(salary ~ sales + roe + ros, data = ceosal1_utility)\n",
+        "\n",
+        "# 3. Cálculo de la Suma de Cuadrados de los Residuos (SSR)\n",
+        "SSR_r        <- sum(residuals(modelo_r)^2)\n",
+        "SSR_indus    <- sum(residuals(modelo_indus)^2)\n",
+        "SSR_finance  <- sum(residuals(modelo_finance)^2)\n",
+        "SSR_consprod <- sum(residuals(modelo_consprod)^2)\n",
+        "SSR_utility  <- sum(residuals(modelo_utility)^2)\n",
+        "\n",
+        "SSR_ur <- SSR_indus + SSR_finance + SSR_consprod + SSR_utility\n",
+        "\n",
+        "# 4. Parámetros y Grados de Libertad\n",
+        "G <- 4               # Número de grupos\n",
+        "k <- 3               # Número de variables explicativas\n",
+        "n <- nrow(ceosal1)   # Total de observaciones (209)\n",
+        "\n",
+        "gl1 <- (G - 1) * (k + 1)  # Numerador (12)\n",
+        "gl2 <- n - (G * (k + 1))  # Denominador (193)\n",
+        "\n",
+        "# 5. Cálculo del Estadístico F y Valor Crítico al 5%\n",
+        "F_est <- ((SSR_r - SSR_ur) / gl1) / (SSR_ur / gl2)\n",
+        "F_critico <- qf(0.95, df1 = gl1, df2 = gl2)\n",
+        "\n",
+        "# 6. Visualización de los Resultados\n",
+        "cat(\"--- RESULTADOS DEL TEST DE CHOW (MÚLTIPLES GRUPOS) ---\\n\")\n",
+        "cat(\"H0: Los modelos son iguales para los 4 sectores.\\n\")\n",
+        "cat(\"H1: Existen diferencias estructurales entre los sectores.\\n\\n\")\n",
+        "\n",
+        "cat(\"Estadístico F calculado (F_est): \", round(F_est, 3), \"\\n\")\n",
+        "cat(\"Valor Crítico (F_critico) al 5%: \", round(F_critico, 3), \"\\n\\n\")\n",
+        "\n",
+        "# 7. Regla de Decisión\n",
+        "if (F_est > F_critico) {\n",
+        "  cat(\"DECISIÓN: Se rechaza H0 (\", round(F_est, 3), \">\", round(F_critico, 3), \")\\n\")\n",
+        "  cat(\"CONCLUSIÓN: Existen diferencias estructurales estadísticamente significativas entre los sectores.\\n\")\n",
+        "} else {\n",
+        "  cat(\"DECISIÓN: No se rechaza H0 (\", round(F_est, 3), \"<\", round(F_critico, 3), \")\\n\")\n",
+        "  cat(\"CONCLUSIÓN: NO existen diferencias estructurales significativas. Un modelo único es adecuado.\\n\")\n",
+        "}"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "9ETG7BOpWKWK",
+        "outputId": "0f465048-93ab-4b6e-e141-1c84d205b2f1"
+      },
+      "execution_count": 24,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "--- RESULTADOS DEL TEST DE CHOW (MÚLTIPLES GRUPOS) ---\n",
+            "H0: Los modelos son iguales para los 4 sectores.\n",
+            "H1: Existen diferencias estructurales entre los sectores.\n",
+            "\n",
+            "Estadístico F calculado (F_est):  1.398 \n",
+            "Valor Crítico (F_critico) al 5%:  1.803 \n",
+            "\n",
+            "DECISIÓN: No se rechaza H0 ( 1.398 < 1.803 )\n",
+            "CONCLUSIÓN: NO existen diferencias estructurales significativas. Un modelo único es adecuado.\n"
+          ]
+        }
+      ]
+    }
+  ]
+}
